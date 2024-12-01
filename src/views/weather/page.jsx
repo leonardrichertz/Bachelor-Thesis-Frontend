@@ -1,6 +1,8 @@
-import { Box, Container } from '@mui/material';
-import { useState } from 'react';
-import { Button, Typography, ButtonGroup} from '@mui/material';
+import { Autocomplete, Box, Container, TextField } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Button, Typography, ButtonGroup } from '@mui/material';
+import ForecastDataGrid from '../../components/ForecastDataGrid';
+import WeatherStyle from '../../components/WeatherStyle';
 
 
 export default function Weather() {
@@ -9,42 +11,33 @@ export default function Weather() {
     const [unit, setUnit] = useState('metric');
 
     const getLocation = async () => {
-        console.log("Getting location...");
         if (navigator.geolocation) {
-            console.log("Geolocation is supported by this browser.");
             navigator.geolocation.getCurrentPosition(async (position) => {
-                console.log("Got position:", position);
                 const { latitude, longitude } = position.coords;
-                console.log("Got location:", latitude, longitude);
                 setLocation({ latitude, longitude });
-                await fetchWeatherData(latitude, longitude);
             });
         } else {
             alert("Geolocation is not supported by this browser.");
         }
     };
 
-    const fetchWeatherData = async (latitude, longitude) => {
+    const fetchWeatherData = async (latitude, longitude, unit) => {
         try {
             const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/weather?lat=${latitude}&lon=${longitude}&unit=${unit}`);
             const { data } = await response.json();
             console.log("Weather data:", data);
+            console.log('Forecasdt', data.daily);
             setCurrentLocationWeatherData(data);
         } catch (error) {
             console.error("Error fetching weather data:", error);
         }
     };
 
-
-    const handleUnits = async (unit) => {
-        setUnit(unit);
+    useEffect(() => {
         if (location) {
-            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/weather?lat=${location.latitude}&lon=${location.longitude}&unit=${unit}`);
-            const { data } = await response.json();
-            console.log("Weather data:", data);
-            setCurrentLocationWeatherData(data);
-        }  
-    }
+            fetchWeatherData(location.latitude, location.longitude, unit);
+        }
+    }, [location, unit]);
 
     return (
         <Container
@@ -57,11 +50,17 @@ export default function Weather() {
                 width: '100vw',
             }}
         >
-            <Box sx={{ bgcolor: 'dark', padding: 2, textAlign: 'center' }}>
+            <Box sx={{ bgcolor: 'white', padding: 2, textAlign: 'center' }}>
                 <Typography variant="h6">Weather Information</Typography>
+                <Box sx={{ margin: 2, width: '80%', padding: '2px' }}>
+                    <Autocomplete
+                        options={['New York', 'London', 'Berlin', 'Paris', 'Tokyo', 'Moscow', 'Beijing', 'Sydney']}
+                        renderInput={(params) => <TextField {...params} label="Type in a Location" variant="outlined" />}
+                    />
+                </Box>
                 <ButtonGroup variant="outlined" aria-label="Basic button group">
-                    <Button onClick={() => handleUnits('metric')} variant={unit === 'metric' ? 'contained' : 'outlined'}>°C</Button>
-                    <Button onClick={() => handleUnits('imperial')} variant={unit === 'imperial' ? 'contained' : 'outlined'}>°F</Button>
+                    <Button onClick={() => setUnit('metric')} variant={unit === 'metric' ? 'contained' : 'outlined'}>°C</Button>
+                    <Button onClick={() => setUnit('imperial')} variant={unit === 'imperial' ? 'contained' : 'outlined'}>°F</Button>
                 </ButtonGroup>
                 <Button variant="contained" onClick={getLocation} sx={{ margin: 2 }}>
                     Get Current Location
@@ -72,9 +71,18 @@ export default function Weather() {
                     </Typography>
                 )}
                 {currentLocationWeatherData && (
-                    <Box sx={{ marginTop: 2 }}>
-                        <Typography variant="body1">Temperature: {currentLocationWeatherData.current.temp}{unit === 'metric' ? '°C' : '°F'}</Typography>
-                        <Typography variant="body1">Humidity: {currentLocationWeatherData.current.humidity}</Typography>
+                    <Box>
+                        <Typography variant="h6">Today's Weather</Typography>
+                        <Box sx={{ marginTop: 2 }}>
+                            <WeatherStyle weather={currentLocationWeatherData.current.weather[0]} />
+                            <Typography variant="body1">{Math.round(currentLocationWeatherData.current.temp)}{unit === 'metric' ? '°C' : '°F'}</Typography>
+                            <Typography variant="body1">Humidity: {currentLocationWeatherData.current.humidity}%</Typography>
+                            <Typography variant="body1">Pressure: {currentLocationWeatherData.current.pressure}hPa</Typography>
+                        </Box>
+                        <Box sx={{ marginTop: 2 }}>
+                            <Typography variant="h6">Forecast</Typography>
+                            <ForecastDataGrid weatherData={currentLocationWeatherData.daily} unit={unit} />
+                        </Box>
                     </Box>
                 )}
             </Box>
