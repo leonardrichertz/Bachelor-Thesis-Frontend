@@ -18,7 +18,7 @@ export default function ForecastDataGrid({ weatherData, unit }) {
                     </Box>
                 </Grid>
                 )
-            })};
+            })}
         </Grid>
     </Box>
     );
