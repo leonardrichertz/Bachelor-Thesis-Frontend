@@ -6,8 +6,7 @@ import * as Weather from './views/weather';
 const router = createBrowserRouter([
     {
         path: '/weather',
-        element: <Weather.Component />,
-        loader: Weather.loader,
+        element: <Weather.Component />
     }
 ]);
 
