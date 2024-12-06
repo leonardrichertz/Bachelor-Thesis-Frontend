@@ -5,6 +5,7 @@ import WeatherStyle from '../../components/WeatherStyle';
 import LinearProgress from '@mui/material/LinearProgress';
 import LineGraph from '../../components/LineGraph';
 import WeatherWarning from '../../components/WeatherWarning';
+import { toast } from 'react-toastify';
 
 export default function Weather() {
     const [location, setLocation] = useState(null);
@@ -12,11 +13,7 @@ export default function Weather() {
     const [unit, setUnit] = useState('metric');
     const [loading, setLoading] = useState(false);
     const [forecastData, setForecastData] = useState(currentLocationWeatherData?.daily || []);
-    const [warning, setWarning] = useState(currentLocationWeatherData?.alerts || []);  
-    console.log(forecastData);
-    console.log(warning);
-
-    console.log(currentLocationWeatherData);
+    const [warning, setWarning] = useState(currentLocationWeatherData?.alerts || []);
 
     const labels = forecastData.map((_, index) => {
         const currentDate = new Date();
@@ -122,6 +119,31 @@ export default function Weather() {
         }
     };
 
+    const saveLocation = (latitude, longitude) => {
+        setLoading(true);
+        try {
+            const response = fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ latitude, longitude }),
+            });
+            if (response.ok) {
+                toast.success("Location saved successfully");
+            }
+            else {
+                toast.error("Error saving location:");
+            }
+        }
+        catch (error) {
+            toast.error("Error saving location:", error);
+        }
+        finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (location) {
             fetchWeatherData(location.latitude, location.longitude, unit);
@@ -151,9 +173,12 @@ export default function Weather() {
                 Get Current Location
             </Button>
             {location && (
-                <Typography variant="body1">
-                    Location: Latitude {location.latitude}, Longitude {location.longitude}
-                </Typography>
+                <Box sx={{ marginTop: 2 }}>
+                    <Typography variant="body1">
+                        Location: Latitude {location.latitude}, Longitude {location.longitude}
+                    </Typography>
+                    <Button variant="contained" onClick={() => saveLocation(location.latitude, location.longitude)} sx={{ margin: 2 }}> Save current Location for later use</Button>
+                </Box>
             )}
             {currentLocationWeatherData && !loading && (
                 <Box sx={{ width: '80%', height: '80%' }}>
@@ -162,8 +187,8 @@ export default function Weather() {
                         <WeatherStyle weather={currentLocationWeatherData.current.weather[0]} />
                         <Typography variant="body1">{Math.round(currentLocationWeatherData.current.temp)}{unit === 'metric' ? '°C' : '°F'}</Typography>
                         <Typography variant="body1">Humidity: {currentLocationWeatherData.current.humidity}%</Typography>
-                        <Typography variant="body1">Pressure: {currentLocationWeatherData.current.pressure}hPa</Typography>
-                        {(warning && warning.length > 0) &&(
+                        <Typography variant="body1">Atmospheric Pressure: {currentLocationWeatherData.current.pressure}hPa</Typography>
+                        {(warning && warning.length > 0) && (
                             <WeatherWarning warnings={warning} />
                         )}
                     </Box>
