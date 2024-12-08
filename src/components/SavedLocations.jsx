@@ -7,6 +7,7 @@ import ListItem from '@mui/material/ListItem';
 
 
 export default function SavedLocations() {
+    const access_token = localStorage.getItem('access_token');
     const [locations, setLocations] = useState([]);
     const [loading, setLoading] = useState(false);
 
@@ -15,6 +16,10 @@ export default function SavedLocations() {
         try {
             const response = fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations/${id}`, {
                 method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${access_token}`,
+                },
             });
             if (response.ok) {
                 toast.success("Location deleted successfully");
@@ -33,11 +38,17 @@ export default function SavedLocations() {
     const fetchLocations = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations`);
+            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${access_token}`,
+                },
+            });
             const data = await response.json();
             setLocations(data);
         } catch (error) {
-            console.error("Error fetching locations:", error);
+            toast.error("Error getting saved Locations");
         } finally {
             setLoading(false);
         }

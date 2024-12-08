@@ -1,13 +1,17 @@
 import { Box, Container } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Button, Typography, ButtonGroup } from '@mui/material';
-import WeatherStyle from '../../components/WeatherStyle';
+import WeatherStyle from '../../../components/WeatherStyle';
 import LinearProgress from '@mui/material/LinearProgress';
-import LineGraph from '../../components/LineGraph';
-import WeatherWarning from '../../components/WeatherWarning';
-import { toast } from 'react-toastify';
+import LineGraph from '../../../components/LineGraph';
+import WeatherWarning from '../../../components/WeatherWarning';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import SavedLocations from '../../../components/SavedLocations';
+
 
 export default function Weather() {
+    const access_token = localStorage.getItem('access_token');
     const [location, setLocation] = useState(null);
     const [currentLocationWeatherData, setCurrentLocationWeatherData] = useState(null);
     const [unit, setUnit] = useState('metric');
@@ -107,25 +111,32 @@ export default function Weather() {
     const fetchWeatherData = async (latitude, longitude, unit) => {
         setLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/weather?lat=${latitude}&lon=${longitude}&unit=${unit}`);
+            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/weather?lat=${latitude}&lon=${longitude}&unit=${unit}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${access_token}`
+                },
+            });
             const { data } = await response.json();
             setCurrentLocationWeatherData(data);
             setForecastData(data?.daily);
             setWarning(data?.alerts);
         } catch (error) {
-            console.error("Error fetching weather data:", error);
+            toast.error("Error fetching weather data");
         } finally {
             setLoading(false);
         }
     };
 
-    const saveLocation = (latitude, longitude) => {
+    const saveLocation = async (latitude, longitude) => {
         setLoading(true);
         try {
-            const response = fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations`, {
+            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${access_token}`,
                 },
                 body: JSON.stringify({ latitude, longitude }),
             });
@@ -202,6 +213,8 @@ export default function Weather() {
                 <Box sx={{ width: '80%', height: '80%' }}>
                     <LinearProgress />
                 </Box>)}
+                <SavedLocations />
+                <ToastContainer />
         </Container >
     );
 };
