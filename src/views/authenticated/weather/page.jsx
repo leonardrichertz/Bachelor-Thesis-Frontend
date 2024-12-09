@@ -18,6 +18,7 @@ export default function Weather() {
     const [loading, setLoading] = useState(false);
     const [forecastData, setForecastData] = useState(currentLocationWeatherData?.daily || []);
     const [warning, setWarning] = useState(currentLocationWeatherData?.alerts || []);
+    const [locations, setLocations] = useState([]);
 
     const labels = forecastData.map((_, index) => {
         const currentDate = new Date();
@@ -142,6 +143,7 @@ export default function Weather() {
             });
             if (response.ok) {
                 toast.success("Location saved successfully");
+                fetchLocations(); // Fetch locations after saving
             }
             else {
                 toast.error("Error saving location:");
@@ -155,11 +157,34 @@ export default function Weather() {
         }
     };
 
+    const fetchLocations = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${access_token}`
+                },
+            });
+            const data = await response.json();
+            setLocations(data);
+        } catch (error) {
+            toast.error("Error fetching locations");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (location) {
             fetchWeatherData(location.latitude, location.longitude, unit);
         }
     }, [location, unit]);
+
+    useEffect(() => {
+        fetchLocations();
+    }, []);
 
     return (
         <Container
@@ -213,8 +238,8 @@ export default function Weather() {
                 <Box sx={{ width: '80%', height: '80%' }}>
                     <LinearProgress />
                 </Box>)}
-                <SavedLocations />
-                <ToastContainer />
+            <SavedLocations locations={locations} fetchLocations={fetchLocations} />
+            <ToastContainer />
         </Container >
     );
 };

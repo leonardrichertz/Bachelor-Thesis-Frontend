@@ -1,20 +1,18 @@
-import React, { useState } from 'react';
+import React,  { useState }from 'react';
 import LinearProgress from '@mui/material/LinearProgress';
-import { useEffect } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
+import { toast } from 'react-toastify';
 
-
-export default function SavedLocations() {
+export default function SavedLocations({ locations, fetchLocations }) {
     const access_token = localStorage.getItem('access_token');
-    const [locations, setLocations] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    const deleteLocation = (id) => {
+    const deleteLocation = async (id) => {
         setLoading(true);
         try {
-            const response = fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations/${id}`, {
+            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations?id=${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -23,52 +21,33 @@ export default function SavedLocations() {
             });
             if (response.ok) {
                 toast.success("Location deleted successfully");
-                fetchLocations();
-            }
-            else {
-                toast.error("Error deleting location:");
+                fetchLocations(); // Fetch locations after deleting
+            } else {
+                toast.error("Error deleting location");
             }
         } catch (error) {
             toast.error("Error deleting location:", error);
         } finally {
             setLoading(false);
         }
-    }
-
-    const fetchLocations = async () => {
-        setLoading(true);
-        try {
-            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${access_token}`,
-                },
-            });
-            const data = await response.json();
-            setLocations(data);
-        } catch (error) {
-            toast.error("Error getting saved Locations");
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        fetchLocations();
-    }, []);
+    };
 
     return (
-        <Box>
+        <Box sx={{ width: '100%', mt: 2 }}>
+            <Typography variant="h6">Saved Locations</Typography>
             {loading && <LinearProgress />}
             <List>
-                {locations.map(location => (
+                {locations.map((location) => (
                     <ListItem key={location.id}>
-                        <Typography>{location.latitude}, {location.longitude}</Typography>
-                        <Button onClick={() => deleteLocation(location.id)}>Delete</Button>
+                        <Typography variant="body1">
+                            Latitude: {location.latitude}, Longitude: {location.longitude}
+                        </Typography>
+                        <Button variant="contained" color="primary" onClick={() => deleteLocation(location.id)} sx={{ ml: 2 }}>
+                            Delete
+                        </Button>
                     </ListItem>
                 ))}
             </List>
         </Box>
-    )
-};
+    );
+}
