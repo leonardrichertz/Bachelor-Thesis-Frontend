@@ -1,6 +1,6 @@
 import { Box, Container } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { Button, Typography, ButtonGroup } from '@mui/material';
+import { Button, Typography, ButtonGroup,IconButton } from '@mui/material';
 import WeatherStyle from '../../../components/WeatherStyle';
 import LinearProgress from '@mui/material/LinearProgress';
 import LineGraph from '../../../components/LineGraph';
@@ -8,7 +8,7 @@ import WeatherWarning from '../../../components/WeatherWarning';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SavedLocations from '../../../components/SavedLocations';
-
+import LogoutIcon from '@mui/icons-material/Logout';
 
 export default function Weather() {
     const access_token = localStorage.getItem('access_token');
@@ -176,6 +176,11 @@ export default function Weather() {
         }
     };
 
+    const logout = () => {
+        localStorage.removeItem('access_token');
+        window.location.href = '/';
+    }
+
     useEffect(() => {
         if (location) {
             fetchWeatherData(location.latitude, location.longitude, unit);
@@ -200,10 +205,15 @@ export default function Weather() {
                 padding: 2
             }}
         >
-            <ButtonGroup variant="outlined" aria-label="Basic button group">
-                <Button onClick={() => setUnit('metric')} variant={unit === 'metric' ? 'contained' : 'outlined'}>°C</Button>
-                <Button onClick={() => setUnit('imperial')} variant={unit === 'imperial' ? 'contained' : 'outlined'}>°F</Button>
-            </ButtonGroup>
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                <ButtonGroup variant="outlined" aria-label="Basic button group">
+                    <Button onClick={() => setUnit('metric')} variant={unit === 'metric' ? 'contained' : 'outlined'}>°C</Button>
+                    <Button onClick={() => setUnit('imperial')} variant={unit === 'imperial' ? 'contained' : 'outlined'}>°F</Button>
+                </ButtonGroup>
+                <IconButton variant="contained" onClick={() => logout()}>
+                    <LogoutIcon/>
+                </IconButton>
+            </Box>
             <Box sx={{ display: 'flex', gap: '5px' }}>
                 <Button variant="contained" onClick={getLocation} sx={{ margin: 2 }}>
                     Get Current Location
@@ -217,30 +227,34 @@ export default function Weather() {
                     </Box>
                 )}
             </Box>
-            {currentLocationWeatherData && !loading && (
-                <Box sx={{ width: '80%', height: '80%' }}>
-                    <Box sx={{ marginTop: 2, width: '100%', minWidth: '100%' }}>
-                        <Typography variant="h6">Today's Weather</Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                            <WeatherStyle weather={currentLocationWeatherData.current.weather[0]} />
-                            <Typography variant="body1">{Math.round(currentLocationWeatherData.current.temp)}{unit === 'metric' ? '°C' : '°F'}</Typography>
-                        </Box>
-                        <Typography variant="body1">Humidity: {currentLocationWeatherData.current.humidity}%</Typography>
-                        <Typography variant="body1">Atmospheric Pressure: {currentLocationWeatherData.current.pressure}hPa</Typography>
-                        {(warning && warning.length > 0) && (
-                            <WeatherWarning warnings={warning} />
-                        )}
+            {
+        currentLocationWeatherData && !loading && (
+            <Box sx={{ width: '80%', height: '80%' }}>
+                <Box sx={{ marginTop: 2, width: '100%', minWidth: '100%' }}>
+                    <Typography variant="h6">Today's Weather</Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
+                        <WeatherStyle weather={currentLocationWeatherData.current.weather[0]} />
+                        <Typography variant="body1">{Math.round(currentLocationWeatherData.current.temp)}{unit === 'metric' ? '°C' : '°F'}</Typography>
                     </Box>
-                    <Box sx={{ marginTop: 2, display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                        <LineGraph data={temperatureData} options={temperatureOptions} />
-                        <LineGraph data={humidityData} options={humidityOptions} />
-                    </Box>
+                    <Typography variant="body1">Humidity: {currentLocationWeatherData.current.humidity}%</Typography>
+                    <Typography variant="body1">Atmospheric Pressure: {currentLocationWeatherData.current.pressure}hPa</Typography>
+                    {(warning && warning.length > 0) && (
+                        <WeatherWarning warnings={warning} />
+                    )}
                 </Box>
-            )}
-            {loading && (
-                <Box sx={{ width: '80%', height: '80%' }}>
-                    <LinearProgress />
-                </Box>)}
+                <Box sx={{ marginTop: 2, display: 'flex', justifyContent: 'center', gap: '5px' }}>
+                    <LineGraph data={temperatureData} options={temperatureOptions} />
+                    <LineGraph data={humidityData} options={humidityOptions} />
+                </Box>
+            </Box>
+        )
+    }
+    {
+        loading && (
+            <Box sx={{ width: '80%', height: '80%' }}>
+                <LinearProgress />
+            </Box>)
+    }
             <SavedLocations locations={locations} fetchLocations={fetchLocations} setLocation={setLocation} selectedLocation={location} />
             <ToastContainer />
         </Container >
