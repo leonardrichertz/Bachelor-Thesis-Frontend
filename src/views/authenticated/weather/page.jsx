@@ -200,28 +200,31 @@ export default function Weather() {
                 padding: 2
             }}
         >
-            <Typography variant="h6">Weather Information</Typography>
             <ButtonGroup variant="outlined" aria-label="Basic button group">
                 <Button onClick={() => setUnit('metric')} variant={unit === 'metric' ? 'contained' : 'outlined'}>°C</Button>
                 <Button onClick={() => setUnit('imperial')} variant={unit === 'imperial' ? 'contained' : 'outlined'}>°F</Button>
             </ButtonGroup>
-            <Button variant="contained" onClick={getLocation} sx={{ margin: 2 }}>
-                Get Current Location
-            </Button>
-            {location && (
-                <Box sx={{ marginTop: 2 }}>
-                    <Typography variant="body1">
-                        Location: Latitude {location.latitude}, Longitude {location.longitude}
-                    </Typography>
-                    <Button variant="contained" onClick={() => saveLocation(location.latitude, location.longitude)} sx={{ margin: 2 }}> Save current Location for later use</Button>
-                </Box>
-            )}
+            <Box sx={{ display: 'flex', gap: '5px' }}>
+                <Button variant="contained" onClick={getLocation} sx={{ margin: 2 }}>
+                    Get Current Location
+                </Button>
+                {location && (
+                    <Box sx={{ marginTop: 2 }}>
+                        <Typography variant="body1">
+                            Location: Latitude {location.latitude}, Longitude {location.longitude}
+                        </Typography>
+                        <Button variant="contained" onClick={() => saveLocation(location.latitude, location.longitude)} sx={{ margin: 2 }}> Save current Location for later use</Button>
+                    </Box>
+                )}
+            </Box>
             {currentLocationWeatherData && !loading && (
                 <Box sx={{ width: '80%', height: '80%' }}>
                     <Box sx={{ marginTop: 2, width: '100%', minWidth: '100%' }}>
                         <Typography variant="h6">Today's Weather</Typography>
-                        <WeatherStyle weather={currentLocationWeatherData.current.weather[0]} />
-                        <Typography variant="body1">{Math.round(currentLocationWeatherData.current.temp)}{unit === 'metric' ? '°C' : '°F'}</Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
+                            <WeatherStyle weather={currentLocationWeatherData.current.weather[0]} />
+                            <Typography variant="body1">{Math.round(currentLocationWeatherData.current.temp)}{unit === 'metric' ? '°C' : '°F'}</Typography>
+                        </Box>
                         <Typography variant="body1">Humidity: {currentLocationWeatherData.current.humidity}%</Typography>
                         <Typography variant="body1">Atmospheric Pressure: {currentLocationWeatherData.current.pressure}hPa</Typography>
                         {(warning && warning.length > 0) && (
@@ -238,7 +241,7 @@ export default function Weather() {
                 <Box sx={{ width: '80%', height: '80%' }}>
                     <LinearProgress />
                 </Box>)}
-            <SavedLocations locations={locations} fetchLocations={fetchLocations} />
+            <SavedLocations locations={locations} fetchLocations={fetchLocations} setLocation={setLocation} selectedLocation={location} />
             <ToastContainer />
         </Container >
     );

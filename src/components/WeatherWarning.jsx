@@ -7,11 +7,11 @@ export default function WeatherWarning({ warnings }) {
             display:
                 'flex', marginTop: '10px', padding: '10px', border: '5px solid #f0f0f0', borderRadius: '10px',
         }}>
-            {warnings.map((alert) => {
+            {warnings.map((alert, index) => {
                 const startDate = new Date(alert.start * 1000).toLocaleString();
                 const endDate = new Date(alert.end * 1000).toLocaleString();
                 return (
-                    <Box>
+                    <Box key={index}>
                         <WarningAmberIcon />
                         <div>{alert.sender_name}</div>
                         <div>{alert.description} from {startDate} - {endDate}</div>

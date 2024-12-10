@@ -1,11 +1,14 @@
-import React,  { useState }from 'react';
+import React, { useState } from 'react';
 import LinearProgress from '@mui/material/LinearProgress';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, IconButton, Typography } from '@mui/material';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import { toast } from 'react-toastify';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Paper from '@mui/material/Paper';
+import Radio from '@mui/material/Radio';
 
-export default function SavedLocations({ locations, fetchLocations }) {
+export default function SavedLocations({ locations, fetchLocations, setLocation, selectedLocation }) {
     const access_token = localStorage.getItem('access_token');
     const [loading, setLoading] = useState(false);
 
@@ -38,14 +41,27 @@ export default function SavedLocations({ locations, fetchLocations }) {
             {loading && <LinearProgress />}
             <List>
                 {locations.map((location) => (
-                    <ListItem key={location.id}>
-                        <Typography variant="body1">
-                            Latitude: {location.latitude}, Longitude: {location.longitude}
-                        </Typography>
-                        <Button variant="contained" color="primary" onClick={() => deleteLocation(location.id)} sx={{ ml: 2 }}>
-                            Delete
-                        </Button>
-                    </ListItem>
+                    <Paper elevation={3} sx={{ p: 2, m: 2 }} key={location.id}>
+                        <ListItem key={location.id}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                            <Typography variant="body1">
+                                Latitude: {location.latitude}, Longitude: {location.longitude}
+                            </Typography>
+                            <Box sx={{ display: "flex", gap: '5px' }} >
+                                <IconButton edge="end" onClick={() => deleteLocation(location.id)} >
+                                    <DeleteIcon />
+                                </IconButton>
+                                <Radio
+                                    checked={selectedLocation?.id === location.id}
+                                    onChange={() => setLocation(location)}
+                                    value={location.id}
+                                    name="location-radio"
+                                    inputProps={{ 'aria-label': location.id }}
+                                />
+                            </Box>
+                        </Box>
+                        </ListItem>
+                    </Paper>
                 ))}
             </List>
         </Box>
