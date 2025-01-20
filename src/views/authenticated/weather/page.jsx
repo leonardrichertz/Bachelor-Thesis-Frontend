@@ -20,7 +20,7 @@ export default function Weather() {
     const [warning, setWarning] = useState(currentLocationWeatherData?.alerts || []);
     const [locations, setLocations] = useState([]);
 
-    const labels = forecastData.map((_, index) => {
+    const labels = forecastData?.map((_, index) => {
         const currentDate = new Date();
         currentDate.setDate(currentDate.getDate() + index);
         return currentDate.toLocaleDateString();
@@ -31,7 +31,7 @@ export default function Weather() {
         datasets: [
             {
                 label: "Temperature",
-                data: forecastData.map((data) => data.temp.day),
+                data: forecastData?.map((data) => data.temp.day),
                 fill: false,
                 backgroundColor: "rgba(75,192,192,1)",
                 borderColor: "rgba(75,192,192,1)",
@@ -45,7 +45,7 @@ export default function Weather() {
         datasets: [
             {
                 label: "Humidity",
-                data: forecastData.map((data) => data.humidity),
+                data: forecastData?.map((data) => data.humidity),
                 fill: false,
                 backgroundColor: "rgba(75,192,192,1)",
                 borderColor: "rgba(75,192,192,1)",

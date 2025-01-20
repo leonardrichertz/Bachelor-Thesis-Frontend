@@ -49,7 +49,7 @@ export default function Login() {
 
   return (
     <>
-      <Box onKeyDown={handleEnterPress} sx={{ mt: 1 }}>
+      <Box onKeyDown={handleEnterPress} sx={{ mt: 1, backgroundColor: 'white', p: 3, borderRadius: '10px', color: 'black' }}>
         <Typography
           component="h1"
           variant="h5"

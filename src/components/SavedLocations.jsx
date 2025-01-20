@@ -40,7 +40,7 @@ export default function SavedLocations({ locations, fetchLocations, setLocation,
             <Typography variant="h6">Saved Locations</Typography>
             {loading && <LinearProgress />}
             <List>
-                {locations.map((location) => (
+                {locations?.map((location) => (
                     <Paper elevation={3} sx={{ p: 2, m: 2 }} key={location.id}>
                         <ListItem key={location.id}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
