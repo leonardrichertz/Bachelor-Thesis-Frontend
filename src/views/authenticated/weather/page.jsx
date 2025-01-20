@@ -143,7 +143,7 @@ export default function Weather() {
             });
             if (response.ok) {
                 toast.success("Location saved successfully");
-                fetchLocations(); // Fetch locations after saving
+                fetchLocations(); 
             }
             else {
                 toast.error("Error saving location:");
