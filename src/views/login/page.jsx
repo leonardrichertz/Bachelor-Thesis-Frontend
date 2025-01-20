@@ -4,6 +4,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { toast, ToastContainer } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -17,6 +18,12 @@ export default function Login() {
     }
   };
 
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  };
+
   const handleLogin = async () => {
 
     if (!email || !password) {
@@ -24,24 +31,32 @@ export default function Login() {
       return;
     }
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+
+      await axios.get(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/sanctum/csrf-cookie`, {
+        withCredentials: true, // Important for sending cookies with the request
       });
 
-      if (!response.ok) {
-        toast.error('Login failed. Please check your credentials');
-        return;
-      }
+      const xsrfToken = getCookie('XSRF-TOKEN');
 
-      const data = await response.json();
-      const { access_token } = data;
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/login`,
+        { email, password },
+        {
+          headers: {
+            'X-XSRF-TOKEN': decodeURIComponent(xsrfToken),  // Send the decoded CSRF token here
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          withCredentials: true,  // Ensure cookies are sent with the request
+        }
+      );
+
+      if (response.status === 204) {
+      const { access_token } = response.data;
       localStorage.setItem('access_token', access_token);
       toast.success('Login successful');
       navigate('/weather');
+    }
     } catch (error) {
       toast.error('Login failed');
     }

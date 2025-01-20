@@ -11,25 +11,25 @@ export default function WeatherStyle({ weather }) {
     let IconComponent;
 
     switch (true) {
-        case (weather.id >= 200 && weather.id <= 232):
+        case (weather?.id >= 200 && weather?.id <= 232):
             IconComponent = ThunderstormIcon;
             break;
-        case (weather.id >= 300 && weather.id <= 321):
+        case (weather?.id >= 300 && weather?.id <= 321):
             IconComponent = CloudIcon;
             break;
-        case (weather.id >= 500 && weather.id <= 531):
+        case (weather?.id >= 500 && weather?.id <= 531):
             IconComponent = UmbrellaIcon;
             break;
-        case (weather.id >= 600 && weather.id <= 622):
+        case (weather?.id >= 600 && weather?.id <= 622):
             IconComponent = AcUnitIcon;
             break;
-        case (weather.id >= 701 && weather.id <= 781):
+        case (weather?.id >= 701 && weather?.id <= 781):
             IconComponent = AirIcon;
             break;
-        case (weather.id === 800):
+        case (weather?.id === 800):
             IconComponent = WbSunnyIcon;
             break;
-        case (weather.id >= 801 && weather.id <= 804):
+        case (weather?.id >= 801 && weather?.id <= 804):
             IconComponent = CloudIcon;
             break;
         default:

@@ -1,6 +1,6 @@
 import { Box, Container } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { Button, Typography, ButtonGroup,IconButton } from '@mui/material';
+import { Button, Typography, ButtonGroup, IconButton } from '@mui/material';
 import WeatherStyle from '../../../components/WeatherStyle';
 import LinearProgress from '@mui/material/LinearProgress';
 import LineGraph from '../../../components/LineGraph';
@@ -9,9 +9,20 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SavedLocations from '../../../components/SavedLocations';
 import LogoutIcon from '@mui/icons-material/Logout';
+import axios from 'axios';
+
+const axiosInstance = axios.create({
+    baseURL: import.meta.env.VITE_BACHELOR_THESIS_BACKEND, // Your backend URL
+    withCredentials: true, // Include credentials (cookies) in requests
+});
+
+const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+};
 
 export default function Weather() {
-    const access_token = localStorage.getItem('access_token');
     const [location, setLocation] = useState(null);
     const [currentLocationWeatherData, setCurrentLocationWeatherData] = useState(null);
     const [unit, setUnit] = useState('metric');
@@ -112,18 +123,21 @@ export default function Weather() {
     const fetchWeatherData = async (latitude, longitude, unit) => {
         setLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/weather?lat=${latitude}&lon=${longitude}&unit=${unit}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${access_token}`
-                },
+            const response = await axiosInstance.get('/api/weather', {
+                params: { lat: latitude, lon: longitude, unit },
             });
-            const { data } = await response.json();
+            const { data } = response.data;
             setCurrentLocationWeatherData(data);
             setForecastData(data?.daily);
             setWarning(data?.alerts);
         } catch (error) {
+            if (error.response && error.response.status === 401) {
+                toast.error("Session expired. Redirecting to login...");
+                window.location.href = '/'; // Redirect to login page
+            } else {
+                toast.error("Error fetching weather data");
+            }
+
             toast.error("Error fetching weather data");
         } finally {
             setLoading(false);
@@ -133,17 +147,20 @@ export default function Weather() {
     const saveLocation = async (latitude, longitude) => {
         setLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${access_token}`,
-                },
-                body: JSON.stringify({ latitude, longitude }),
-            });
-            if (response.ok) {
+            const xsrfToken = getCookie('XSRF-TOKEN');
+            const response = await axiosInstance.post('/api/locations', { latitude, longitude },
+                {
+                    headers: {
+                      'X-XSRF-TOKEN': decodeURIComponent(xsrfToken),  // Send the decoded CSRF token here
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json',
+                    },
+                    withCredentials: true,  // Ensure cookies are sent with the request
+                }
+            );
+            if (response.status === 200) {
                 toast.success("Location saved successfully");
-                fetchLocations(); 
+                fetchLocations();
             }
             else {
                 toast.error("Error saving location:");
@@ -160,22 +177,22 @@ export default function Weather() {
     const fetchLocations = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/api/locations`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${access_token}`
-                },
-            });
-            const data = await response.json();
-            setLocations(data);
+            const response = await axiosInstance.get('/api/locations');
+            setLocations(response.data);
         } catch (error) {
-            toast.error("Error fetching locations");
+            if (error.response && error.response.status === 401) {
+                toast.error("Session expired. Redirecting to login...");
+                window.location.href = '/'; // Redirect to login page
+            }
+            else {
+                toast.error("Error fetching locations");
+            }
         } finally {
             setLoading(false);
         }
     };
 
+    // Refactor this function to use axiosInstance and cookies
     const logout = () => {
         localStorage.removeItem('access_token');
         window.location.href = '/';
@@ -211,7 +228,7 @@ export default function Weather() {
                     <Button onClick={() => setUnit('imperial')} variant={unit === 'imperial' ? 'contained' : 'outlined'}>°F</Button>
                 </ButtonGroup>
                 <IconButton variant="contained" onClick={() => logout()}>
-                    <LogoutIcon/>
+                    <LogoutIcon />
                 </IconButton>
             </Box>
             <Box sx={{ display: 'flex', gap: '5px' }}>
@@ -228,33 +245,33 @@ export default function Weather() {
                 )}
             </Box>
             {
-        currentLocationWeatherData && !loading && (
-            <Box sx={{ width: '80%', height: '80%' }}>
-                <Box sx={{ marginTop: 2, width: '100%', minWidth: '100%' }}>
-                    <Typography variant="h6">Today's Weather</Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                        <WeatherStyle weather={currentLocationWeatherData.current.weather[0]} />
-                        <Typography variant="body1">{Math.round(currentLocationWeatherData.current.temp)}{unit === 'metric' ? '°C' : '°F'}</Typography>
+                currentLocationWeatherData && !loading && (
+                    <Box sx={{ width: '80%', height: '80%' }}>
+                        <Box sx={{ marginTop: 2, width: '100%', minWidth: '100%' }}>
+                            <Typography variant="h6">Today's Weather</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: '5px' }}>
+                                <WeatherStyle weather={currentLocationWeatherData?.current?.weather[0]} />
+                                <Typography variant="body1">{Math.round(currentLocationWeatherData?.current?.temp)}{unit === 'metric' ? '°C' : '°F'}</Typography>
+                            </Box>
+                            <Typography variant="body1">Humidity: {currentLocationWeatherData?.current?.humidity}%</Typography>
+                            <Typography variant="body1">Atmospheric Pressure: {currentLocationWeatherData?.current?.pressure}hPa</Typography>
+                            {(warning && warning.length > 0) && (
+                                <WeatherWarning warnings={warning} />
+                            )}
+                        </Box>
+                        <Box sx={{ marginTop: 2, display: 'flex', justifyContent: 'center', gap: '5px' }}>
+                            <LineGraph data={temperatureData} options={temperatureOptions} />
+                            <LineGraph data={humidityData} options={humidityOptions} />
+                        </Box>
                     </Box>
-                    <Typography variant="body1">Humidity: {currentLocationWeatherData.current.humidity}%</Typography>
-                    <Typography variant="body1">Atmospheric Pressure: {currentLocationWeatherData.current.pressure}hPa</Typography>
-                    {(warning && warning.length > 0) && (
-                        <WeatherWarning warnings={warning} />
-                    )}
-                </Box>
-                <Box sx={{ marginTop: 2, display: 'flex', justifyContent: 'center', gap: '5px' }}>
-                    <LineGraph data={temperatureData} options={temperatureOptions} />
-                    <LineGraph data={humidityData} options={humidityOptions} />
-                </Box>
-            </Box>
-        )
-    }
-    {
-        loading && (
-            <Box sx={{ width: '80%', height: '80%' }}>
-                <LinearProgress />
-            </Box>)
-    }
+                )
+            }
+            {
+                loading && (
+                    <Box sx={{ width: '80%', height: '80%' }}>
+                        <LinearProgress />
+                    </Box>)
+            }
             <SavedLocations locations={locations} fetchLocations={fetchLocations} setLocation={setLocation} selectedLocation={location} />
             <ToastContainer />
         </Container >
