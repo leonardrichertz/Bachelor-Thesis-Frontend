@@ -31,7 +31,6 @@ export default function Login() {
       return;
     }
     try {
-
       await axios.get(`${import.meta.env.VITE_BACHELOR_THESIS_BACKEND}/sanctum/csrf-cookie`, {
         withCredentials: true, // Important for sending cookies with the request
       });
