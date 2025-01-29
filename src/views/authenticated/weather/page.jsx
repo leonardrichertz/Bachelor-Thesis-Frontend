@@ -151,9 +151,9 @@ export default function Weather() {
             const response = await axiosInstance.post('/api/locations', { latitude, longitude },
                 {
                     headers: {
-                      'X-XSRF-TOKEN': decodeURIComponent(xsrfToken),  // Send the decoded CSRF token here
-                      'Content-Type': 'application/json',
-                      'Accept': 'application/json',
+                        'X-XSRF-TOKEN': decodeURIComponent(xsrfToken),  // Send the decoded CSRF token here
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                     },
                     withCredentials: true,  // Ensure cookies are sent with the request
                 }
@@ -192,10 +192,32 @@ export default function Weather() {
         }
     };
 
-    // Refactor this function to use axiosInstance and cookies
-    const logout = () => {
-        localStorage.removeItem('access_token');
-        window.location.href = '/';
+    // If logout is successful, redirect to the login page
+    const logout = async () => {
+        try {
+        const xsrfToken = getCookie('XSRF-TOKEN');
+
+            const response = await axiosInstance.post('/api/logout', {},
+                {
+                    headers: {
+                        'X-XSRF-TOKEN': decodeURIComponent(xsrfToken), 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    withCredentials: true,  // Ensure cookies are sent with the request
+                }
+            );
+            if (response.status === 204) {
+                window.location.href = '/';
+            }
+            else {
+                toast.error("Error logging out");
+            }
+        }
+        catch (error) {
+            toast.error("Error logging out");
+        }
+
     }
 
     useEffect(() => {
